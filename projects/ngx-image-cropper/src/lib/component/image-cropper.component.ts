@@ -42,7 +42,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
     private setImageMaxSizeRetries = 0;
     private cropperScaledMinWidth = 20;
     private cropperScaledMinHeight = 20;
-    private exifTransform: ExifTransform = {rotate: 0, flip: false};
+    private exifTransform: ExifTransform = { rotate: 0, flip: false };
     private autoRotateSupported: Promise<boolean> = supportsAutomaticRotation();
     private stepSize = 3;
 
@@ -53,8 +53,8 @@ export class ImageCropperComponent implements OnChanges, OnInit {
     imageVisible = false;
     moveTypes = MoveTypes;
 
-    @ViewChild('wrapper', {static: true}) wrapper: ElementRef;
-    @ViewChild('sourceImage', {static: false}) sourceImage: ElementRef;
+    @ViewChild('wrapper', { static: true }) wrapper: ElementRef;
+    @ViewChild('sourceImage', { static: false }) sourceImage: ElementRef;
 
     @Input() imageChangedEvent: any;
     @Input() imageURL: string;
@@ -98,7 +98,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
     @Output() loadImageFailed = new EventEmitter<void>();
 
     constructor(private sanitizer: DomSanitizer,
-                private cd: ChangeDetectorRef) {
+        private cd: ChangeDetectorRef) {
         this.initCropper();
     }
 
@@ -364,7 +364,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
             this.setMaxSize();
             this.setCropperScaledMinSize();
             this.resetCropperPosition();
-            this.cropperReady.emit({...this.maxSize});
+            this.cropperReady.emit({ ...this.maxSize });
             this.cd.markForCheck();
         } else {
             this.setImageMaxSizeRetries++;
@@ -386,7 +386,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
     private activatePinchGesture() {
         if (this.Hammer) {
             const hammer = new this.Hammer(this.wrapper.nativeElement);
-            hammer.get('pinch').set({enable: true});
+            hammer.get('pinch').set({ enable: true });
             hammer.on('pinchmove', this.onPinch.bind(this));
             hammer.on('pinchend', this.pinchStop.bind(this));
             hammer.on('pinchstart', this.startPinch.bind(this));
@@ -460,7 +460,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
         const moveEvent = this.getEventForKey(event.key, this.stepSize);
         event.preventDefault();
         event.stopPropagation();
-        this.startMove({clientX: 0, clientY: 0}, moveType, position);
+        this.startMove({ clientX: 0, clientY: 0 }, moveType, position);
         this.moveImg(moveEvent);
         this.moveStop();
     }
@@ -496,14 +496,14 @@ export class ImageCropperComponent implements OnChanges, OnInit {
     private getEventForKey(key: string, stepSize: number): any {
         switch (key) {
             case 'ArrowUp':
-                return {clientX: 0, clientY: stepSize * -1};
+                return { clientX: 0, clientY: stepSize * -1 };
             case 'ArrowRight':
-                return {clientX: stepSize, clientY: 0};
+                return { clientX: stepSize, clientY: 0 };
             case 'ArrowDown':
-                return {clientX: 0, clientY: stepSize};
+                return { clientX: 0, clientY: stepSize };
             case 'ArrowLeft':
             default:
-                return {clientX: stepSize * -1, clientY: 0};
+                return { clientX: stepSize * -1, clientY: 0 };
         }
     }
 
@@ -823,7 +823,7 @@ export class ImageCropperComponent implements OnChanges, OnInit {
                 const output: ImageCroppedEvent = {
                     width, height,
                     imagePosition,
-                    cropperPosition: {...this.cropper}
+                    cropperPosition: { ...this.cropper }
                 };
                 if (this.containWithinAspectRatio) {
                     output.offsetImagePosition = this.getOffsetImagePosition();
@@ -905,17 +905,24 @@ export class ImageCropperComponent implements OnChanges, OnInit {
         return Math.min(1, Math.max(0, this.imageQuality / 100));
     }
 
-    private getResizeRatio(width: number, height: number): number {
+    getResizeRatio(width: number, height: number): number {
+        const ratioWidth = this.resizeToWidth / width;
+        const ratioHeight = this.resizeToHeight / height;
+        const ratios = new Array<number>();
+
         if (this.resizeToWidth > 0) {
-            if (!this.onlyScaleDown || width > this.resizeToWidth) {
-                return this.resizeToWidth / width;
-            }
-        } else if (this.resizeToHeight > 0) {
-            if (!this.onlyScaleDown || height > this.resizeToHeight) {
-                return this.resizeToHeight / height;
-            }
+            ratios.push(ratioWidth);
         }
-        return 1;
+        if (this.resizeToHeight > 0) {
+            ratios.push(ratioHeight);
+        }
+
+        const result = ratios.length === 0 ? 1 : Math.min(...ratios);
+
+        if (result > 1 && !this.onlyScaleDown) {
+            return result;
+        }
+        return Math.min(result, 1);
     }
 
     private getClientX(event: any): number {
